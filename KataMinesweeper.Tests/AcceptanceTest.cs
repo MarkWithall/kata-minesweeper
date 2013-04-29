@@ -15,7 +15,7 @@ namespace KataMinesweeper.Tests
         {
             var input = File.ReadAllLines("../../AcceptanceTestFiles/SampleInput.txt");
             var expectedOutput = File.ReadAllLines("../../AcceptanceTestFiles/SampleOutput.txt");
-            Assert.That(Minesweeper.Sweep(input), Is.EqualTo(expectedOutput).AsCollection);
+            Assert.That(new Minesweeper().Sweep(input).ToList(), Is.EqualTo(expectedOutput).AsCollection);
         }
     }
 }
