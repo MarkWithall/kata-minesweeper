@@ -9,7 +9,7 @@ namespace KataMinesweeper
     {
         public static IEnumerable<string> Sweep(IEnumerable<string> input)
         {
-            var reader = new MinefieldReader();
+            var reader = new MinefieldReader(new MinefieldCollectionBuilder());
             var minefields = reader.Read(input);
             return minefields.Results;
         }
@@ -24,9 +24,9 @@ namespace KataMinesweeper
         private readonly MinefieldCollectionBuilder _minefieldCollectionBuilder;
         private Action<string> _processLine;
 
-        public MinefieldReader()
+        public MinefieldReader(MinefieldCollectionBuilder minefieldCollectionBuilder)
         {
-            _minefieldCollectionBuilder = new MinefieldCollectionBuilder();
+            _minefieldCollectionBuilder = minefieldCollectionBuilder;
             _processLine = StartNewMinefield;
         }
 
