@@ -42,7 +42,7 @@ namespace KataMinesweeper
             if (line == "0 0")
                 return;
             var dimentions = line.Split(' ');
-            _minefieldCollectionBuilder.StartNewMinefield(int.Parse(dimentions[0]), int.Parse(dimentions[1]));
+            _minefieldCollectionBuilder.StartNewMinefield(int.Parse(dimentions[0]));
             _processLine = AddRowToCurrentMinefield;
         }
 
@@ -68,9 +68,9 @@ namespace KataMinesweeper
             get { return CurrentBuilder.IsReady; }
         }
 
-        public void StartNewMinefield(int rows, int columns)
+        public void StartNewMinefield(int rows)
         {
-            _mineFieldBuilders.Add(new MinefieldBuilder(rows, columns));
+            _mineFieldBuilders.Add(new MinefieldBuilder(rows));
         }
 
         public void AddRowToCurrentMinefield(string line)
@@ -87,13 +87,11 @@ namespace KataMinesweeper
     public class MinefieldBuilder
     {
         private readonly int _rows;
-        private readonly int _columns;
         private readonly List<string> _cells = new List<string>();
 
-        public MinefieldBuilder(int rows, int columns)
+        public MinefieldBuilder(int rows)
         {
             _rows = rows;
-            _columns = columns;
         }
 
         public bool IsReady
@@ -103,21 +101,26 @@ namespace KataMinesweeper
 
         public Minefield Build()
         {
-            var cells = new Cell[_rows,_columns];
+            var cells = new Cell[_rows,Columns];
             for (var row = 0; row < _rows; ++row)
                 AddRowCells(row, cells);
             return new Minefield(cells, new AdjacentMineCounter(cells));
         }
 
-        private void AddRowCells(int columns, Cell[,] cells)
-        {
-            for (var c = 0; c < _columns; ++c)
-                cells[columns, c] = new Cell(_cells[columns][c]);
-        }
-
         public void AddRow(string line)
         {
             _cells.Add(line);
+        }
+
+        private int Columns
+        {
+            get { return _cells.First().Length; }
+        }
+
+        private void AddRowCells(int columns, Cell[,] cells)
+        {
+            for (var c = 0; c < Columns; ++c)
+                cells[columns, c] = new Cell(_cells[columns][c]);
         }
     }
 
