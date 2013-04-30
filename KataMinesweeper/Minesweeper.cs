@@ -106,7 +106,7 @@ namespace KataMinesweeper
             var cells = new Cell[_rows,_columns];
             for (var row = 0; row < _rows; ++row)
                 AddRowCells(row, cells);
-            return new Minefield(cells);
+            return new Minefield(cells, new AdjacentMineCounter(cells));
         }
 
         private void AddRowCells(int columns, Cell[,] cells)
@@ -155,10 +155,12 @@ namespace KataMinesweeper
     public class Minefield
     {
         private readonly Cell[,] _cells;
+        private readonly AdjacentMineCounter _adjacentMineCounter;
 
-        public Minefield(Cell[,] cells)
+        public Minefield(Cell[,] cells, AdjacentMineCounter adjacentMineCounter)
         {
             _cells = cells;
+            _adjacentMineCounter = adjacentMineCounter;
         }
 
         public IEnumerable<string> Result(int fieldNumber)
@@ -180,10 +182,20 @@ namespace KataMinesweeper
         {
             if (_cells[row, column].IsMine)
                 return "*";
-            return AdjacentMineCount(row, column);
+            return _adjacentMineCounter.AdjacentMineCount(row, column);
+        }
+    }
+
+    public class AdjacentMineCounter
+    {
+        private readonly Cell[,] _cells;
+
+        public AdjacentMineCounter(Cell[,] cells)
+        {
+            _cells = cells;
         }
 
-        private int AdjacentMineCount(int row, int column)
+        public int AdjacentMineCount(int row, int column)
         {
             var count = 0;
             foreach (var r in Enumerable.Range(row - 1, 3))
