@@ -5,27 +5,13 @@ using System.Text;
 
 namespace KataMinesweeper
 {
-    public class Minesweeper
+    public static class Minesweeper
     {
-        private readonly List<string> _result = new List<string>(); 
-
-        public IEnumerable<string> Sweep(IEnumerable<string> input)
+        public static IEnumerable<string> Sweep(IEnumerable<string> input)
         {
             var reader = new MinefieldReader();
-            reader.Read(input);
-            var fieldNumber = 1;
-            foreach (var minefield in reader.Minefields)
-            {
-                _result.AddRange(minefield.Result(fieldNumber++));
-                AddNewlineIfNeeded(fieldNumber, reader.Minefields.Count());
-            }
-            return _result;
-        }
-
-        private void AddNewlineIfNeeded(int fieldNumber, int totalMinefields)
-        {
-            if (fieldNumber > 1 && fieldNumber <= totalMinefields)
-                _result.Add(String.Empty);
+            var minefields = reader.Read(input);
+            return minefields.Results;
         }
 
         public static void Main(string[] args)
@@ -35,40 +21,66 @@ namespace KataMinesweeper
 
     public class MinefieldReader
     {
-        private readonly List<Minefield> _mineFields = new List<Minefield>();
-        private MinefieldBuilder _currentBuilder;
+        private readonly MinefieldCollectionBuilder _minefieldCollectionBuilder;
         private Action<string> _processLine;
 
         public MinefieldReader()
         {
-            _processLine = StartNewMinefield;            
+            _minefieldCollectionBuilder = new MinefieldCollectionBuilder();
+            _processLine = StartNewMinefield;
         }
 
-        public IEnumerable<Minefield> Minefields
-        {
-            get { return _mineFields; }
-        }
-
-        public void Read(IEnumerable<string> lines)
+        public MinefieldCollection Read(IEnumerable<string> lines)
         {
             foreach (var line in lines)
                 _processLine(line);
+            return _minefieldCollectionBuilder.Build();
         }
 
         private void StartNewMinefield(string line)
         {
+            if (line == "0 0")
+                return;
             var dimentions = line.Split(' ');
-            _currentBuilder = new MinefieldBuilder(int.Parse(dimentions[0]), int.Parse(dimentions[1]));
+            _minefieldCollectionBuilder.StartNewMinefield(int.Parse(dimentions[0]), int.Parse(dimentions[1]));
             _processLine = AddRowToCurrentMinefield;
         }
 
         private void AddRowToCurrentMinefield(string line)
         {
-            _currentBuilder.AddRow(line);
-            if (!_currentBuilder.IsReady)
-                return;
-            _mineFields.Add(_currentBuilder.Build());
-            _processLine = StartNewMinefield;
+            _minefieldCollectionBuilder.AddRowToCurrentMinefield(line);
+            if (_minefieldCollectionBuilder.CurrentMinefieldIsReady)
+                _processLine = StartNewMinefield;
+        }
+    }
+
+    public class MinefieldCollectionBuilder
+    {
+        private readonly List<MinefieldBuilder> _mineFieldBuilders = new List<MinefieldBuilder>();
+
+        public MinefieldCollection Build()
+        {
+            return new MinefieldCollection(_mineFieldBuilders.Select(mfb => mfb.Build()).ToList());
+        }
+
+        public bool CurrentMinefieldIsReady
+        {
+            get { return CurrentBuilder.IsReady; }
+        }
+
+        public void StartNewMinefield(int rows, int columns)
+        {
+            _mineFieldBuilders.Add(new MinefieldBuilder(rows, columns));
+        }
+
+        public void AddRowToCurrentMinefield(string line)
+        {
+            CurrentBuilder.AddRow(line);
+        }
+
+        private MinefieldBuilder CurrentBuilder
+        {
+            get { return _mineFieldBuilders.Last(); }
         }
     }
 
@@ -106,6 +118,37 @@ namespace KataMinesweeper
         public void AddRow(string line)
         {
             _cells.Add(line);
+        }
+    }
+
+    public class MinefieldCollection
+    {
+        private readonly ICollection<Minefield> _minefields;
+        private readonly List<string> _result = new List<string>();
+
+        public MinefieldCollection(ICollection<Minefield> minefields)
+        {
+            _minefields = minefields;
+        }
+
+        public IEnumerable<string> Results
+        {
+            get
+            {
+                var fieldNumber = 1;
+                foreach (var minefield in _minefields)
+                {
+                    _result.AddRange(minefield.Result(fieldNumber++));
+                    AddNewlineIfNeeded(fieldNumber, _minefields.Count());
+                }
+                return _result;
+            }
+        }
+
+        private void AddNewlineIfNeeded(int fieldNumber, int totalMinefields)
+        {
+            if (fieldNumber > 1 && fieldNumber <= totalMinefields)
+                _result.Add(String.Empty);
         }
     }
 
