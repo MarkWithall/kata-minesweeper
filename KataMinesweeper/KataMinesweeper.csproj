@@ -43,6 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdjacentMineCounter.cs" />
+    <Compile Include="Cell.cs" />
+    <Compile Include="Minefield.cs" />
+    <Compile Include="MinefieldBuilder.cs" />
+    <Compile Include="MinefieldCollection.cs" />
+    <Compile Include="MinefieldCollectionBuilder.cs" />
+    <Compile Include="MinefieldReader.cs" />
     <Compile Include="Minesweeper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
